@@ -1,0 +1,28 @@
+---
+- name: Deploy nginx config
+  hosts: localhost
+  remote_user: root
+  vars:
+    server_name: alabala.com
+    document_root: /var/www/html/alabala
+  tasks:
+    - name: Install nginx
+      package: name=nginx state=latest
+    - replace: 
+        dest: /etc/nginx/nginx.conf
+        regexp: '#\sserver_names_hash_bucket_size'
+        replace: 'server_names_hash_bucket_size'
+      notify: restart nginx
+    - template:
+        src: template/template.j2
+        dest: /etc/nginx/sites-available/{{ server_name }}.conf
+      when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'        
+       
+    - template:
+        src: template/template.j2
+        dest: /etc/nginx/sites/{{ server_name}}.conf
+      when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+  #   handlers:
+  #
+  #    - name: notify nginx
+  #     service: name-nginx state=restarted
